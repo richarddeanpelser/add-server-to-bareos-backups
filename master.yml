@@ -1,0 +1,19 @@
+---
+
+- hosts: "{{ server_fqdn }}"
+  remote_user: root
+  roles:
+    - allow-outside-mysql-connections
+    - install-bareos-client 
+
+
+- hosts: "{{ bareos_storage_daemon_fqdn }}"
+  become: true
+  become_method: sudo
+  roles:
+    - add-job-to-bareos-director
+
+
+
+
+
