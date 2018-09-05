@@ -18,14 +18,20 @@
 #  version: 0.0.3
 
 
-- name: add-job-to-bareos-director
-  src: https://github.com/stancel/add-job-to-bareos-director
-  version: 1.0.0
+#- name: add-job-to-bareos-director
+#  src: https://github.com/stancel/add-job-to-bareos-director
+#  version: 1.0.0
 
-- name: setup-mysql-backups
-  src: https://github.com/stancel/setup-mysql-backups
-  version: 1.0.0
+#- name: setup-mysql-backups
+#  src: https://github.com/stancel/setup-mysql-backups
+#  version: 1.0.0
 
-- name: install-bareos-client
-  src: https://github.com/stancel/install-bareos-client
-  version: 1.0.0
+#- name: install-bareos-client
+#  src: https://github.com/stancel/install-bareos-client
+#  version: 1.0.0
+
+- src: stancel.add-job-to-bareos-director
+
+- src: stancel.setup-mysql-backups
+
+- src: stancel.install-bareos-client
