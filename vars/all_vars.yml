@@ -5,94 +5,136 @@
 # ansible-playbook master.yml -e @vars/all_vars.yml -i hosts/production
 
 
-#####     Required Variables      #####
+#####     Required Variables  -  Playbook Level    #####
+
+# Host Name of the droplet, also the droplet name as shown in DigitalOcean
+host_name: "To be filled in"
+
+# The Fully Qualified Domain Name you'll be using for the server you are creating. DO DNS will create an A record for this entry and point it to your newly created droplet.
+server_fqdn: "To be filled in"
+
+# Is this a "new", "upgrade" or "restore" installation? "new" and "upgrade" installs install files from Git, "restore" skips any git deployments and expect a later role to restore files to the needed directory. 
+#installation_type: "new"
+
+# Is this instance to be used for a "dev", "qa" or "prod" environment? Only "prod" environments will deploy the SuiteCRM schedulers.
+environment_type: "prod"
+
+# The database to create when setting up the application and backup
+db_name: "To be filled in"
+
+# The alias or Nagios friendly name to show in Nagios as the computer being monitored
+nagios_friendly_name: "{{host_name}}-{{environment_type}}"
+
+# Document root directory of your webserver
+web_files_path: "/srv/www/{{ server_fqdn }}"
+
+# Application directory inside the webserver document root directory
+# If you the web directory is a symlink then put a trailing "/." at the end
+web_directory_for_application:  "/current/."
 
 
-#####   Role - setup-mysql-backups   #####
+# Environment Variables Set - These need to be set!
+digital_ocean_api_token: "{{ lookup('env', 'DO_API_TOKEN') }}"
+admin_user_ssh_key_fingerprint: "{{ lookup('env', 'DO_SSH_KEY_SIG_BRAD_PERSONAL') }}"
+control_server_ssh_key_fingerprint: "{{ lookup('env', 'DO_SSH_KEY_SIG_ATL_SERVER') }}"
+bareos_server_fqdn: "{{ lookup('env', 'BAREOS_STORAGE_DAEMON_FQDN') }}"
+bareos_storage_password: "{{ lookup('env', 'BAREOS_STORAGE_PASSWORD') }}"
+nagios_server_fqdn: "{{ lookup('env', 'NAGIOS_SERVER_FQDN') }}"
+
+
+
+
+#####   Role - stancel.setup-mysql-backups   #####
 
 # List of databases to backup
-dbs_to_backup: 
-  - "business"
+setup_mysql_backups_dbs_to_backup: 
+  - "{{ db_name }}"
 
 # MySQL / MariaDB root password
-mysql_root_password: ""
+setup_mysql_backups_mysql_root_password: "{{ mysql_root_password }}"
+
+# Number of DB Backups to keep
+#setup_mysql_backups_num_db_backups_to_keep: 30
 
 
-#####   Role - install-bareos-client    #####
+
+#####   Role - stancel.install-bareos-client    #####
 
 # The Bareos Director password for the Bareos File Daemon service being installed. This should be a very long string (47 characters is the default) and must match the applicable records 
-client_password: "Some very long string password here"
+install_bareos_client_client_password: "{{ bareos_client_password }}" 
+
+# Which (numerical) version of Ubuntu you are installing this onto
+install_bareos_client_bareos_ubuntu_install_version: "18.04"
 
 
-#####   Role - add-job-to-bareos-director    #####
+
+#####   Role - stancel.add-job-to-bareos-director     #####
 
 # The hostname of the machine you are backing up
-host_name: "To Be Filled In"
+add_job_to_bareos_director_host_name: "{{ host_name }}"
 
 # The fully qualified domain name or IP address of the machine you are adding to be backed up
-server_fqdn: "To Be Filled In"
+add_job_to_bareos_director_server_fqdn: "{{ server_fqdn }}"
 
 # The fully qualified domain name or IP address of where your Bareos Storage Daemon/Service is running. For most people this will probably be the same FQDN of where the Bareos Director daemon/service runs (your Bareos Server), but can be a separate machine.
-bareos_storage_daemon_fqdn: "To Be Filled In"
+add_job_to_bareos_director_bareos_storage_daemon_fqdn: "{{ bareos_server_fqdn }}"
 
 # It needs to match the client_password entered when adding the bareos client program to the machine you want to backup. The value for this is usually a very long string (47 characters) of random characters.
-client_password: "To Be Filled In"
+add_job_to_bareos_director_client_password: "{{ install_bareos_client_client_password }}"
+
 # The storage director password variable is the bareos-dir password found on your Bareos Server
-storage_director_password: "{{ lookup('env', 'BAREOS_STORAGE_PASSWORD') }}"
+add_job_to_bareos_director_storage_director_password: "{{ bareos_storage_password }}"
 
 
 # Backup Level - Full, Incremental, Differential
 # Incremental - all ﬁles changed since the last Full, Diﬀerential, or Incremental backup started
 # Diﬀerential - all ﬁles speciﬁed in the FileSet that have changed since the last successful *Full* backup will be backed up
 # Full - all ﬁles in the FileSet whether or not they have changed will be backed up
-level: Incremental
+add_job_to_bareos_director_level: Incremental
 
 # Permits you to control the order in which your jobs will be run. The higher the number, the lower the job priority. 
-priority: 6
+add_job_to_bareos_director_priority: 6
 
 # See the README documentation for more detailed info on these variables
-backup_schedule:
-  - Run = Full sun at 02:00
-  - Run = Incremental mon-sat at 02:00
+add_job_to_bareos_director_backup_schedule:
+  - Run = Full sun at 02:40
+  - Run = Incremental mon-sat at 02:15
 
-archive_device: "/z-storage/backups/{{ host_name }}"
+add_job_to_bareos_director_archive_device: "/z-storage/backups/{{ add_job_to_bareos_director_host_name }}"
 
-filesets_to_backup:
-  - File = "/var/www/html"
-  - File = "/etc/apache2"
+add_job_to_bareos_director_filesets_to_backup:
+  - File = "{{ web_files_path }}{{ web_directory_for_application }}"
   - File = "/backups/mysql/current"
-filesets_to_exclude:
-  - File = "/var/www/html/.github"
-  - File = "/var/www/html/.git"
-  - File = "/var/www/html/.gitignore"
-
+add_job_to_bareos_director_filesets_to_exclude:
+  - File = "{{ web_files_path }}{{ web_directory_for_application }}/.github"
+  - File = "{{ web_files_path }}{{ web_directory_for_application }}/.git"
+  - File = "{{ web_files_path }}{{ web_directory_for_application }}/.gitignore"
 
 #####     Optional Variables      #####
 
 # These variables are set with the below defaults in defaults/main.yml. 
 # Only uncomment and change them or pass values if you would like
 
-#backup_name: "{{ host_name }} Backup"
+#add_job_to_bareos_director_backup_name: "{{ add_job_to_bareos_director_host_name }} Backup"
 
 # Individual File Records Storage Length - affects browsing files in GUI
 #file_retention: 90 days
 # Job Records in the DB - how long to store info about backups
-#job_retention: 6 months
-
+#add_job_to_bareos_director_job_retention: 6 months
 
 # How long to actually store the backup files
 #volume_retention_full: 12 months
 # Maximum size of each backup volume/file
 #maximum_volume_bytes_full: 10G
 # Limit number of Volumes in Pool
-#maximum_volumes_full: 10
+#add_job_to_bareos_director_maximum_volumes_full: 10
 
 # How long to actually store the backup files
 #volume_retention_incremental: 12 months
 # Maximum size of each backup volume/file
 #maximum_volume_bytes_incremental: 10G
 # Limit number of Volumes in Pool
-#maximum_volumes_incremental: 10
+#add_job_to_bareos_director_maximum_volumes_incremental: 10
 
 
 #####   Role - 4 vars    #####

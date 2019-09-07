@@ -3,11 +3,10 @@
 - hosts: "{{ server_fqdn }}"
   remote_user: root
   roles:
-    - stancel.allow-outside-mysql-connections
+    - stancel.setup-mysql-backups
     - stancel.install-bareos-client 
 
-
-- hosts: "{{ bareos_storage_daemon_fqdn }}"
+- hosts: "{{ bareos_server_fqdn }}"
   become: true
   become_method: sudo
   roles:

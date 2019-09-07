@@ -1,0 +1,23 @@
+---
+# vars file for install-bareos-client
+
+#####     Required Variables      #####
+# Uncomment these and fill in appropriate values unless passing from a higher precedence
+
+
+# The Bareos Director password for the Bareos File Daemon service being installed. This should be a very long string (47 characters is the default) and must match the applicable records 
+install_bareos_client_client_password: "Some very long string password here"
+
+
+
+
+#####     Optional Variables      #####
+
+# These variables are set with the below defaults in defaults/main.yml. 
+# Only change them or pass values if you would like
+
+# Which (numerical) version of Ubuntu you are installing this onto
+#install_bareos_client_bareos_ubuntu_install_version: "16.04"
+# if installing onto Ubuntu 18.04, then make sure to keep the "16.04" as the value for install_bareos_client_bareos_ubuntu_install_version
+# this uses a temporary workaround found here https://schroeffu.ch/2018/05/workaround-bareos-backup-server-client-unter-ubuntu-18-04/
+# until an official Bareos client is released for Ubuntu 18.04
